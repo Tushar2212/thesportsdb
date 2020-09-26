@@ -26,7 +26,7 @@ dependencies:
   flutter_svg:
   provider:
   cached_network_image:
-  connectivity:
+  connectivity: ^0.4.9+3
 
 
   # The following adds the Cupertino Icons font to your application.
