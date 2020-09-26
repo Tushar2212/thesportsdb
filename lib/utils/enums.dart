@@ -1,0 +1,4 @@
+enum LeagueRequestType {
+  GetLeagues,
+  SearchLeague,
+}
