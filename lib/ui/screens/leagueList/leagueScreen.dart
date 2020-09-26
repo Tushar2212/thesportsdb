@@ -54,28 +54,30 @@ class _LeagueScreenState extends State<LeagueScreen> {
       ),
       body:connectivityProvider.isConnectedToNetwork ? Column(
         children: <Widget>[
-          Container(
-              margin: EdgeInsets.only(top: 8.0, left: 10.0, right: 10.0),
-              height: 40,
-              child: TextField(
-                controller: tfController,
-                decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.circular(5.0)),
-                    hintText: 'Search Leagues...',
-                    contentPadding: EdgeInsets.only(left: 8.0),
-                    filled: true,
-                    fillColor: Colors.grey[300],
-                    ),
-                onSubmitted: (text) {
-                  print(text);
-                },
-                onChanged: (text) {
-                  leagueListChange.value = _sendRequest(
-                      countryName, LeagueRequestType.SearchLeague, text);
-                },
-              )),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical:8.0,horizontal: 15.0),
+            child: Container(
+                height: 40,
+                child: TextField(
+                  controller: tfController,
+                  decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(5.0)),
+                      hintText: 'Search Leagues...',
+                      contentPadding: EdgeInsets.only(left: 8.0),
+                      filled: true,
+                      fillColor: Colors.grey[300],
+                      ),
+                  onSubmitted: (text) {
+                    print(text);
+                  },
+                  onChanged: (text) {
+                    leagueListChange.value = _sendRequest(
+                        countryName, LeagueRequestType.SearchLeague, text);
+                  },
+                )),
+          ),
           ValueListenableBuilder(
             valueListenable: leagueListChange,
             builder: (_, leagueListChangeVal, __) {
