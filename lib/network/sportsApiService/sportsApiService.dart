@@ -1,21 +1,15 @@
-
 import 'package:chopper/chopper.dart';
 import 'package:choppersample/model/sport_list_model.dart';
-import 'package:choppersample/network/apiRequest.dart';
-import 'package:choppersample/network/networkClient.dart';
+import 'package:choppersample/network/sportsHttpReq.dart';
 import 'package:choppersample/network/serializer/JsonTypeConvertor.dart';
 import 'package:choppersample/utils/Constants.dart';
 
 part 'sportsApiService.chopper.dart';
 
-class SportsReq extends ApiRequest
-{
-  SportsReq() : super(null);
-}
 
 
 @ChopperApi(baseUrl: "/all_sports.php")
-abstract class SportsApiService extends ChopperService implements NetworkClient {
+abstract class SportsApiService extends ChopperService implements HttpCustomClient {
 
   @Get()
   Future<Response<SportListModel>> getSportsList();

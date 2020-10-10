@@ -1,4 +1,5 @@
-enum LeagueRequestType {
+enum RequestType {
+  GetSportsList,
   GetLeagues,
   SearchLeague,
 }

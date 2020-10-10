@@ -41,12 +41,6 @@ class MyApp extends StatelessWidget {
         Provider(
           create: (_) => DataProvider(),
         ),
-        Provider(
-          create: (_) => LeagueApiService.create(),
-        ),
-        Provider(
-          create: (_) => SportsApiService.create(),
-        )
       ],
       child: MaterialApp(
         theme: ThemeData(

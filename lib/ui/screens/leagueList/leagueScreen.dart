@@ -1,8 +1,9 @@
 import 'package:chopper/chopper.dart';
 import 'package:choppersample/model/league_res_model.dart';
 import 'package:choppersample/model/sport_list_model.dart';
-import 'package:choppersample/network/apiRequest.dart';
+import 'package:choppersample/network/httpRequest.dart';
 import 'package:choppersample/network/leagueApiService/leagueApiService.dart';
+import 'package:choppersample/network/sportsHttpReq.dart';
 import 'package:choppersample/providers/connectivityProvider.dart';
 import 'package:choppersample/providers/countryProvider.dart';
 import 'package:choppersample/ui/screens/leagueList/uiWidgets/leagueListItem.dart';
@@ -22,17 +23,16 @@ class _LeagueScreenState extends State<LeagueScreen> {
   Future<List<League>> leagueList;
   List<Sports> sportList;
   TextEditingController tfController = TextEditingController();
-  LeagueApiService leagueApiService;
   ValueNotifier<Future<List<League>>> leagueListChange;
-
+  SendHttpRequest _sendHttpRequest;
   @override
   void initState() {
     super.initState();
+    _sendHttpRequest = LeagueHttpRequest();
     countryName = Provider.of<DataProvider>(context, listen: false).country;
-    leagueApiService = Provider.of<LeagueApiService>(context, listen: false);
     leagueList = _sendRequest(
       countryName,
-      LeagueRequestType.GetLeagues,
+      RequestType.GetLeagues,
     );
     leagueListChange = ValueNotifier(leagueList);
   }
@@ -74,7 +74,7 @@ class _LeagueScreenState extends State<LeagueScreen> {
                   },
                   onChanged: (text) {
                     leagueListChange.value = _sendRequest(
-                        countryName, LeagueRequestType.SearchLeague, text);
+                        countryName, RequestType.SearchLeague, text);
                   },
                 )),
           ),
@@ -114,11 +114,10 @@ class _LeagueScreenState extends State<LeagueScreen> {
     );
   }
 
-  Future<List<League>> _sendRequest(String pCountry, LeagueRequestType pReqType,
+  Future<List<League>> _sendRequest(String pCountry, RequestType pReqType,
       [String pSearchText]) async {
-    Response<LeagueResponseModel> leagueList =
-        await ApiRequest(leagueApiService).sendRequest(
-            LeagueReq(s: pSearchText, c: pCountry, reqType: pReqType));
+    Response leagueList =
+        await _sendHttpRequest.sendHttpRequest(LeagueReq(s: pSearchText, c: pCountry, reqType: pReqType));
     return leagueList.body.countrys;
   }
 
