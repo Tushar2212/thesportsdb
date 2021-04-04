@@ -1,11 +1,13 @@
-import 'package:choppersample/network/leagueApiService/leagueApiService.dart';
-import 'package:choppersample/network/sportsApiService/sportsApiService.dart';
 import 'package:choppersample/providers/connectivityProvider.dart';
 import 'package:choppersample/providers/countryProvider.dart';
 import 'package:choppersample/ui/screens/countryList/countryListScreen.dart';
 import 'package:choppersample/ui/screens/leagueList/leagueScreen.dart';
+import 'package:choppersample/utils/Constants.dart';
 import 'package:choppersample/utils/UtilFunctions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:league_repo/bloc/league_bloc.dart';
+import 'package:league_repo/league_repo.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +32,6 @@ void _setUpLogging() {
 }
 
 class MyApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -50,7 +51,12 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => CountryListScreen(),
-          '/LeagueScreen': (context) => LeagueScreen(),
+          '/LeagueScreen': (context) => BlocProvider(
+                create: (_) => LeagueBloc(
+                  LeagueHttpClient(baseUrl),
+                ),
+                child: LeagueScreen(),
+              ),
         },
       ),
     );

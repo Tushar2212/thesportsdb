@@ -27,6 +27,9 @@ dependencies:
   provider:
   cached_network_image:
   connectivity: ^0.4.9+3
+  league_repo:
+    path: league_repo
+  flutter_bloc:
 
 
   # The following adds the Cupertino Icons font to your application.

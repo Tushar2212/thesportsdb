@@ -1,4 +1,3 @@
-import 'package:choppersample/model/league_res_model.dart';
 import 'package:choppersample/model/sport_list_model.dart';
 import 'package:choppersample/providers/countryProvider.dart';
 import 'package:choppersample/utils/ScreenSizeConfig.dart';
@@ -6,6 +5,7 @@ import 'package:choppersample/utils/UtilFunctions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:league_repo/models/models.dart';
 import 'package:provider/provider.dart';
 
 class LeagueListItem extends StatelessWidget {

@@ -1,16 +1,14 @@
-import 'package:chopper/chopper.dart';
-import 'package:choppersample/model/league_res_model.dart';
-import 'package:choppersample/model/sport_list_model.dart';
-import 'package:choppersample/network/httpRequest.dart';
-import 'package:choppersample/network/leagueApiService/leagueApiService.dart';
-import 'package:choppersample/network/sportsHttpReq.dart';
 import 'package:choppersample/providers/connectivityProvider.dart';
 import 'package:choppersample/providers/countryProvider.dart';
 import 'package:choppersample/ui/screens/leagueList/uiWidgets/leagueListItem.dart';
 import 'package:choppersample/utils/Constants.dart';
 import 'package:choppersample/utils/UtilFunctions.dart';
-import 'package:choppersample/utils/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:league_repo/bloc/events.dart';
+import 'package:league_repo/bloc/league_bloc.dart';
+import 'package:league_repo/bloc/states.dart';
+import 'package:league_repo/league_repo.dart';
 import 'package:provider/provider.dart';
 
 class LeagueScreen extends StatefulWidget {
@@ -20,21 +18,15 @@ class LeagueScreen extends StatefulWidget {
 
 class _LeagueScreenState extends State<LeagueScreen> {
   String countryName;
-  Future<List<League>> leagueList;
-  List<Sports> sportList;
   TextEditingController tfController = TextEditingController();
-  ValueNotifier<Future<List<League>>> leagueListChange;
-  SendHttpRequest _sendHttpRequest;
+  LeagueBloc _leagueBloc;
+
   @override
   void initState() {
     super.initState();
-    _sendHttpRequest = LeagueHttpRequest();
     countryName = Provider.of<DataProvider>(context, listen: false).country;
-    leagueList = _sendRequest(
-      countryName,
-      RequestType.GetLeagues,
-    );
-    leagueListChange = ValueNotifier(leagueList);
+    _leagueBloc = BlocProvider.of<LeagueBloc>(context, listen: false);
+    _leagueBloc.add(LoadCountryLeagues(countryName));
   }
 
   @override
@@ -45,80 +37,88 @@ class _LeagueScreenState extends State<LeagueScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ConnectivityProvider connectivityProvider = Provider.of<ConnectivityProvider>(context);
+    ConnectivityProvider connectivityProvider =
+        Provider.of<ConnectivityProvider>(context);
     getCurrentNetworkStatus()
         .then((value) => connectivityProvider.isConnectedToNetwork = value);
     return Scaffold(
       appBar: AppBar(
         title: Text(countryName),
       ),
-      body:connectivityProvider.isConnectedToNetwork ? Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical:8.0,horizontal: 15.0),
-            child: Container(
-                height: 40,
-                child: TextField(
-                  controller: tfController,
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                          borderRadius: BorderRadius.circular(5.0)),
-                      hintText: 'Search Leagues...',
-                      contentPadding: EdgeInsets.only(left: 8.0),
-                      filled: true,
-                      fillColor: Colors.grey[300],
-                      ),
-                  onSubmitted: (text) {
-                    print(text);
-                  },
-                  onChanged: (text) {
-                    leagueListChange.value = _sendRequest(
-                        countryName, RequestType.SearchLeague, text);
-                  },
-                )),
-          ),
-          ValueListenableBuilder(
-            valueListenable: leagueListChange,
-            builder: (_, leagueListChangeVal, __) {
-              return FutureBuilder(
-                  future: leagueListChangeVal,
-                  builder: (context, dataSnapShot) {
-
-                    if (dataSnapShot.connectionState == ConnectionState.done &&
-                        (dataSnapShot.hasData == null || (dataSnapShot.data as List<League>) == null))
-                      return Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Center(
-                          child: Text(noLeagueFoundErrorMsg),
-                        ),
-                      );
-                    return Expanded(
-                      child: dataSnapShot.hasData
-                          ? ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: dataSnapShot.data.length,
-                              itemBuilder: (_, index) => LeagueListItem(
-                                league: dataSnapShot.data[index],
-                              ),
-                            )
-                          : Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                    );
-                  });
-            },
-          ),
-        ],
-      ) : Center(child: Text(noConnectionErrorMsg),),
+      body: connectivityProvider.isConnectedToNetwork
+          ? BlocBuilder<LeagueBloc, LeagueStates>(
+              builder: (context, state) => Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 15.0),
+                    child: Container(
+                        height: 40,
+                        child: TextField(
+                          controller: tfController,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.circular(5.0)),
+                            hintText: 'Search Leagues...',
+                            contentPadding: EdgeInsets.only(left: 8.0),
+                            filled: true,
+                            fillColor: Colors.grey[300],
+                          ),
+                          onSubmitted: (text) {
+                            print(text);
+                          },
+                          onChanged: (text) {
+                            if (text.isEmpty)
+                              _leagueBloc.add(LoadCountryLeagues(countryName));
+                            else
+                              _leagueBloc.add(
+                                LeagueSearch(countryName, text: text),
+                              );
+                          },
+                        )),
+                  ),
+                  Expanded(
+                    child: _getUi(state),
+                  ),
+                ],
+              ),
+            )
+          : Center(
+              child: Text(noConnectionErrorMsg),
+            ),
     );
   }
 
-  Future<List<League>> _sendRequest(String pCountry, RequestType pReqType,
-      [String pSearchText]) async {
-    Response leagueList =
-        await _sendHttpRequest.sendHttpRequest(LeagueReq(s: pSearchText, c: pCountry, reqType: pReqType));
-    return leagueList.body.countrys;
+  Widget _getUi(LeagueStates state) {
+    List<League> _leagues;
+    switch (state.runtimeType) {
+      case LeagueInit:
+      case LeagueSearchLoading:
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+        break;
+      case LeaguesForCountryLoaded:
+        _leagues = (state as LeaguesForCountryLoaded).leagues;
+        continue leagueSearchDone;
+      leagueSearchDone:
+      case LeagueSearchDone:
+        _leagues = _leagues ?? (state as LeagueSearchDone).leagues;
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: _leagues.length,
+          itemBuilder: (_, index) => LeagueListItem(
+            league: _leagues[index],
+          ),
+        );
+      default:
+        return Center(
+          child: Text(noLeagueFoundErrorMsg),
+        );
+    }
+    return Center(
+      child: Text(noLeagueFoundErrorMsg),
+    );
   }
-
 }
