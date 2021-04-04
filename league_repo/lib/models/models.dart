@@ -1,0 +1,1 @@
+export 'league_res_model.dart';
